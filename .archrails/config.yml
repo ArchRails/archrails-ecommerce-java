@@ -1,0 +1,36 @@
+version: 1
+
+default_architecture: layered-services
+
+governance:
+  provider: file
+  file: docs/architecture/calm-spec.json
+
+mapping:
+  - path: src/EcommercePlatform.java
+    node: system-ecommerce-platform
+
+  - path: src/EcommercePlatform.java#ApiGateway
+    node: service-api-gateway
+
+  - path: src/EcommercePlatform.java#OrderService
+    node: service-order
+
+  - path: src/EcommercePlatform.java#InventoryService
+    node: service-inventory
+
+  - path: src/EcommercePlatform.java#PaymentService
+    node: service-payment
+
+  - path: src/EcommercePlatform.java#OrderDatabase
+    node: db-orders
+
+  - path: src/EcommercePlatform.java#InventoryDatabase
+    node: db-inventory
+
+review:
+  on: pull_request
+
+integrations:
+  github:
+    app: archrails
