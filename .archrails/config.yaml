@@ -3,8 +3,8 @@ version: 1
 default_architecture: layered-services
 
 governance:
-  provider: file
-  file: docs/architecture/calm-spec.json
+  provider: calm
+  file: docs/architecture/calm.json
 
 mapping:
   - path: src/EcommercePlatform.java
