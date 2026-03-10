@@ -3,17 +3,7 @@ import java.util.concurrent.*;
 import java.time.*;
 import java.time.format.*;
 
-/**
- * ArchRails – E-Commerce Platform Demo  [VIOLATION BUILD]
- *
- * CALM violations introduced:
- *   V1 (PaymentService)  — connects to undeclared node payments-v2.internal:8081
- *                          calm.json declares external-payment-gateway @ payments.example-gateway.com:443
- *   V2 (OrderService)    — service-order connects directly to db-inventory (inventory-db:5432)
- *                          calm.json has no rel for service-order → db-inventory
- *   V3 (ApiGateway)      — actor-admin logged as direct source to order-service:8080
- *                          calm.json: actor-admin interacts with service-api-gateway only
- */
+
 public class EcommercePlatform {
 
     static final String RESET  = "\033[0m";
@@ -119,7 +109,6 @@ public class EcommercePlatform {
     static class PaymentService {
         // unique-id: service-payment | runtime: java:17 | port: 8080
         //
-        // *** VIOLATION 1 ***
         // calm.json declares: external-payment-gateway @ payments.example-gateway.com:443
         // This code calls:    payments-v2.internal:8081
         // That host/node does not exist in calm.json — undeclared connection.
@@ -130,7 +119,7 @@ public class EcommercePlatform {
             log("service-payment", PURPLE,
                 String.format("Charging $%.2f for order %s", amount, orderId));
             log("service-payment", GRAY,
-                "→ payments-v2.internal:8081  POST /charge");   // ← VIOLATION 1
+                "→ payments-v2.internal:8081  POST /charge");  
             sleep(200);
 
             if (Math.random() < 0.05) {
@@ -184,12 +173,11 @@ public class EcommercePlatform {
                 return new Failure("Payment failed: " + payment.message());
             }
 
-            // *** VIOLATION 2 ***
             // calm.json has no relationship for service-order → db-inventory.
             // Only service-inventory is permitted to talk to inventory-db:5432
             // (rel-connects-inventory-db). This direct DB call bypasses that boundary.
             log("service-order", GRAY,
-                "→ inventory-db:5432  SELECT qty FROM stock WHERE sku=...");  // ← VIOLATION 2
+                "→ inventory-db:5432  SELECT qty FROM stock WHERE sku=..."); 
 
             Order order = new Order(orderId, customerId, lines, "CONFIRMED", Instant.now());
             log("service-order", GRAY, "→ orders-db:5432  INSERT INTO orders ...");
@@ -255,12 +243,6 @@ public class EcommercePlatform {
                 "GET /orders  ←  actor: " + actorId + "  [ADMIN]");
             if (!checkRateLimit(actorId)) return List.of();
 
-            // *** VIOLATION 3 ***
-            // calm.json: actor-admin has rel-interacts-admin-api to service-api-gateway only.
-            // Actors must not appear as the source of a connects relationship to internal services.
-            // Logging actor-admin as the direct caller of order-service:8080 violates that boundary.
-            log("actor-admin", GRAY, "→ order-service:8080  GET /orders");  // ← VIOLATION 3
-
             sleep(40);
             return orderService.listOrders();
         }
@@ -296,10 +278,7 @@ public class EcommercePlatform {
     // ── main ─────────────────────────────────────────────────────────────────
 
     public static void main(String[] args) {
-
-        banner("ArchRails  ·  E-Commerce Platform  ·  CALM 1.2  [VIOLATION BUILD]");
-        System.out.println(DIM + "  3 deliberate CALM violations — see comments marked ← VIOLATION N" + RESET);
-
+ 
         List<Product> catalogue = List.of(
             new Product("KB-PRO-001", "Mechanical Keyboard Pro",  149.99, 12),
             new Product("CAM-4K-002", "4K Webcam Ultra",           89.99,  3),
@@ -317,7 +296,6 @@ public class EcommercePlatform {
 
         Scanner scanner = new Scanner(System.in);
 
-        // Scenario 1 — browse (no violations)
         section("SCENARIO 1  —  Customer browses catalogue");
         System.out.println();
         List<Product> products = gateway.getProducts("actor-customer");
@@ -331,8 +309,6 @@ public class EcommercePlatform {
                 p.sku(), p.name(), p.price(), stockStr);
         }
 
-        // Scenario 2 — order (triggers V1 + V2)
-        section("SCENARIO 2  —  Place order  [triggers VIOLATION 1 + 2]");
         System.out.println();
         Product kb  = catalogue.get(0);
         Product cam = catalogue.get(1);
@@ -344,7 +320,6 @@ public class EcommercePlatform {
                 GREEN + BOLD, RESET, s.order().orderId(), s.order().total(), s.txnId());
 
         // Scenario 3 — admin list (triggers V3)
-        section("SCENARIO 3  —  Admin lists orders  [triggers VIOLATION 3]");
         System.out.println();
         List<Order> allOrders = gateway.listOrders("actor-admin");
         System.out.println();
@@ -356,17 +331,6 @@ public class EcommercePlatform {
                     o.orderId(), o.customerId(), o.total(), GREEN, o.status(), RESET);
             }
         }
-
-        // Summary
-        banner("Demo complete  —  3 CALM violations embedded");
-        System.out.println();
-        System.out.println(RED + BOLD + "  VIOLATION SUMMARY" + RESET);
-        System.out.println(RED + "  V1 — service-payment connects to payments-v2.internal:8081" + RESET);
-        System.out.println(GRAY + "       Expected: external-payment-gateway @ payments.example-gateway.com:443" + RESET);
-        System.out.println(RED + "  V2 — service-order connects directly to inventory-db:5432" + RESET);
-        System.out.println(GRAY + "       Expected: only service-inventory may connect to db-inventory" + RESET);
-        System.out.println(RED + "  V3 — actor-admin logged as direct source to order-service:8080" + RESET);
-        System.out.println(GRAY + "       Expected: actor-admin interacts with service-api-gateway only" + RESET);
-        System.out.println();
+ 
     }
 }
