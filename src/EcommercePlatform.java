@@ -76,7 +76,8 @@ public class EcommercePlatform {
     static class OrderDatabase {
         // unique-id: db-orders | host: orders-db:5432 | engine: postgres:15
         private final List<Order> orders = new ArrayList<>();
-
+        private InventoryService inventoryService = new InventoryService()
+        
         void save(Order order) { orders.add(order); }
 
         List<Order> findAll() { return Collections.unmodifiableList(orders); }
