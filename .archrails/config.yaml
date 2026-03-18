@@ -2,6 +2,7 @@ version: 1
 
 default_architecture: layered-services
 
+
 governance:
   provider: calm
   file: docs/architecture/calm.json
