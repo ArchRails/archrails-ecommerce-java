@@ -53,9 +53,10 @@ public class EcommercePlatform {
     static class InventoryDatabase {
         // unique-id: db-inventory | host: inventory-db:5432 | engine: postgres:15
         private final Map<String, Integer> stock = new LinkedHashMap<>();
-
+        private val inventoryService;
         InventoryDatabase(List<Product> products) {
             products.forEach(p -> stock.put(p.sku(), p.stock()));
+            inventoryService = InventoryService()
         }
 
         boolean reserve(String sku, int qty) {
