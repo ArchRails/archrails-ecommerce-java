@@ -167,7 +167,9 @@ public class EcommercePlatform {
         private final PaymentService   paymentService;
         private final OrderDatabase    orderDb;
 
-        OrderService(InventoryService inv, PaymentService pay, OrderDatabase db) {
+        OrderService(InventoryService inv, 
+                     PaymentService pay, 
+                     OrderDatabase db) {
             this.inventoryService = inv;
             this.paymentService   = pay;
             this.orderDb          = db;
